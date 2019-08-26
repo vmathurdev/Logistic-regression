@@ -1,0 +1,73 @@
+# Set the working directory
+setwd("C:/Users/samsung/Desktop/homework")
+##############################
+# Read in the data.
+titanic <- read.csv("./titanicdata.csv",header=TRUE)
+##############################
+# Check the structure of the data.
+str(titanic)
+##############################
+# Now, check for missing values.
+sapply(titanic,function(x) sum(is.na(x)))
+##############################
+# Now, check for number of unique values.
+sapply(titanic, function(x) length(unique(x)))
+##############################
+# Replace missing values on age with the mean age.
+titanic$age[is.na(titanic$age)] <- mean(titanic$age,na.rm=T)
+##############################
+# Replace missing values on fare with the mean fare.
+titanic$fare[is.na(titanic$fare)] <- mean(titanic$fare,na.rm=T)
+##############################
+# Drop the two cases with embarked missing.
+titanic <- titanic[!is.na(titanic$embarked),]
+##############################
+# Drop the following variables:
+#     name, ticket, cabin, home.dest
+drop.vars <- names(titanic) %in% c("name", "ticket", "cabin","home.dest") 
+titanic.2 <- titanic[!drop.vars]
+##############################
+# Now, check again for missing values.
+sapply(titanic.2,function(x) sum(is.na(x)))
+##############################
+# Check the coding for the factor variables.
+contrasts(titanic.2$sex)
+contrasts(titanic.2$embarked)
+
+# Set seed for randomization to "111"
+set.seed(111)
+
+#Create training and testing samples of the data (75% training and 25% testing). Check the number of cases in each subsample.
+
+# Assigning the row numbers
+
+n.train <- round(nrow(titanic)* 0.75,0) 
+
+# This produces the list of rows for the training set
+sub <- sample(nrow(titanic),n.train) 
+
+head(sub)
+
+# Creating the training subset
+
+titanic.train <- titanic[sub,] 
+
+# All the remaining data gets assigned to test set
+titanic.test <- titanic[-sub,] 
+
+# Check the dimensions of titanic.train dataset
+dim(titanic.train)
+
+# Check the dimensions of titanic.test dataset
+dim(titanic.test) 
+
+#Run a logistic regression model with the titanic data. Obtaining accuracy measures using test data and determine which predictors are statistically significant.
+logit.model <- glm(survived ~., family = binomial (link='logit'), data=titanic.train)
+summary(logit.model)
+
+#Create a confusion matrix and assess the predictive accuracy of the model on the training and then on the testing sample. Use the package "caret". Compare the accuracy for the training and test data.
+install.packages("caret")
+library(caret)
+test.logic <- predict(logit.model, newdata=titanic.test, type ='response')
+pred.test.logit <- ifelse (test.logit > 0.5, "Yes", "No")
+confusionMatrix(pred.test.logit,data=titanic.test$survived, pos="Yes")
